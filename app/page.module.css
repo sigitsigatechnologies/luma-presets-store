@@ -556,16 +556,74 @@
   font-weight: 700;
   color: var(--text);
   line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  min-height: 2.7em;
 }
 
 .productSubtitle {
   font-size: 11.5px;
   color: var(--text-3);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+}
+
+.productPromo {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.28);
+}
+
+.promoFlash {
+  background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+}
+
+.promoBestseller {
+  background: linear-gradient(135deg, #7c3aed 0%, #4338ca 100%);
+}
+
+.promoNew {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+}
+
+.productSaving {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.productOld {
+  font-size: 11px;
+  color: var(--text-3);
+  text-decoration: line-through;
+}
+
+.productSave {
+  font-size: 10px;
+  font-weight: 700;
+  color: #b91c1c;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  padding: 1px 6px;
+  border-radius: 999px;
   white-space: nowrap;
 }
 
@@ -933,4 +991,13 @@
   .grid { gap: 12px; }
   .bundleGrid { grid-template-columns: 1fr; }
   .searchBox { max-width: 100%; }
+  .productBody { padding: 10px 10px 11px; gap: 3px; }
+  .productName { font-size: 13px; min-height: 2.6em; }
+  .productSubtitle { font-size: 10.5px; }
+  .productPrice { font-size: 13px; }
+  .productFooter { margin-top: 6px; gap: 6px; }
+  .productReady { display: none; }
+  .productCategory { left: 8px; top: 8px; font-size: 9px; padding: 2px 7px; }
+  .productPromo { left: 8px; bottom: 8px; font-size: 9px; padding: 3px 8px; }
+  .productSave { font-size: 9px; }
 }

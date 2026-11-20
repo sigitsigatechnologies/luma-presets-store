@@ -664,9 +664,36 @@ export default function HomePage() {
   );
 }
 
+function getProductPromo(product) {
+  const seed = String(product.code || product.id || product.name || "");
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+
+  const bucket = hash % 10;
+  if (bucket < 5) {
+    const price = Number(product.price) || 0;
+    const originalPrice = Math.max(Math.round((price * 1.5) / 1000) * 1000, price + 5000);
+    return { type: "flash", label: "Promo", originalPrice };
+  }
+  if (bucket < 7) return { type: "bestseller", label: "Best Seller" };
+  if (bucket < 9) return { type: "new", label: "Baru" };
+  return null;
+}
+
 function ProductCard({ product, onBuy }) {
   const price = typeof product.price === "number" ? product.price : Number(product.price) || 0;
   const fallback = FALLBACK_IMAGE;
+  const promo = getProductPromo(product);
+  const discount =
+    promo?.originalPrice > price ? Math.round((1 - price / promo.originalPrice) * 100) : 0;
+  const promoClass =
+    promo?.type === "bestseller"
+      ? styles.promoBestseller
+      : promo?.type === "new"
+        ? styles.promoNew
+        : styles.promoFlash;
 
   return (
     <article className={styles.productCard}>
@@ -683,10 +710,23 @@ function ProductCard({ product, onBuy }) {
         />
         <span className={styles.productCategory}>{product.category || "General"}</span>
         <span className={styles.productReady}>Siap unduh</span>
+        {promo && (
+          <span className={`${styles.productPromo} ${promoClass}`}>
+            {promo.type === "flash" ? `Promo -${discount}%` : promo.label}
+          </span>
+        )}
       </button>
       <div className={styles.productBody}>
         <h3 className={styles.productName}>{product.name}</h3>
         <p className={styles.productSubtitle}>{product.subtitle || "Preset warna untuk berbagai suasana"}</p>
+        {promo?.originalPrice > price && (
+          <div className={styles.productSaving}>
+            <span className={styles.productOld}>Rp {promo.originalPrice.toLocaleString("id-ID")}</span>
+            <span className={styles.productSave}>
+              Hemat Rp {(promo.originalPrice - price).toLocaleString("id-ID")}
+            </span>
+          </div>
+        )}
         <div className={styles.productFooter}>
           <span className={styles.productPrice}>Rp {price.toLocaleString("id-ID")}</span>
           <button className="btn btn-primary btn-sm" onClick={onBuy}>

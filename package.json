@@ -10,7 +10,8 @@
     "sync": "node scripts/sync-to-database.js",
     "populate": "node scripts/populate-files-to-database.js",
     "db:init": "node scripts/init-db.js",
-    "catalog": "node scripts/update-catalog.js"
+    "catalog": "node scripts/update-catalog.js",
+    "images": "node scripts/fetch-theme-images.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
