@@ -60,3 +60,18 @@ CREATE INDEX IF NOT EXISTS idx_access_codes_order ON access_codes(order_id);
 -- 5. Kolom tambahan untuk database lama (idempotent)
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS bundle_items TEXT;
 ALTER TABLE access_codes ADD COLUMN IF NOT EXISTS bundle_items TEXT;
+
+-- 6. Tabel Trafik / Kunjungan Website
+CREATE TABLE IF NOT EXISTS site_visits (
+  id BIGSERIAL PRIMARY KEY,
+  visitor_id TEXT,
+  path TEXT DEFAULT '/',
+  referrer TEXT DEFAULT '',
+  user_agent TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  visit_date DATE DEFAULT (CURRENT_DATE)
+);
+
+CREATE INDEX IF NOT EXISTS idx_site_visits_created ON site_visits(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_site_visits_visitor ON site_visits(visitor_id);
+CREATE INDEX IF NOT EXISTS idx_site_visits_date ON site_visits(visit_date);

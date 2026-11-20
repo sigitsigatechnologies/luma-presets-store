@@ -1,10 +1,32 @@
 import { NextResponse } from "next/server";
-import { ProductModel } from "@/lib/models/product.model.js";
+import { ProductModel, formatProduct } from "@/lib/models/product.model.js";
 import { query } from "@/lib/config/database.js";
 import { isAuthenticated } from "@/lib/auth.js";
 import { CSV_TEMPLATE_HEADERS, normalizeRow, parseCsv, toBoolean } from "@/lib/utils/csv.js";
 import { extractZipEntries } from "@/lib/utils/zip.js";
 import { guessCategory, buildPresetImage } from "@/lib/utils/product-meta.js";
+
+function chunkArray(arr, size) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+async function upsertBatch(rows) {
+  if (!rows.length) return [];
+  const cols = ["id", "code", "name", "subtitle", "category", "price", "status", "available", "description", "image", "file"];
+  const values = [];
+  const placeholders = rows.map((r, i) => {
+    const base = i * cols.length;
+    const ph = cols.map((_, j) => `$${base + j + 1}`);
+    values.push(r.id, r.code, r.name, r.subtitle, r.category, r.price, r.status, r.available, r.description, r.image, r.file);
+    return `(${ph.join(",")})`;
+  });
+  const updates = cols.filter((c) => c !== "id").map((c) => `${c} = EXCLUDED.${c}`).join(", ");
+  const sql = `INSERT INTO products (${cols.join(",")}) VALUES ${placeholders.join(",")} ON CONFLICT (id) DO UPDATE SET ${updates} RETURNING *`;
+  const { rows: out } = await query(sql, values);
+  return out;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -212,16 +234,17 @@ export async function POST(req) {
         if (extension === "zip") {
           const entries = extractZipEntries(bytes).filter((entry) => !isJunkPath(entry.filename));
           if (isZipArchive(entries)) {
+            let addedFromArchive = 0;
             for (const entry of entries) {
               const entryExtension = getExtension(entry.filename);
               if (entryExtension === "csv") {
-                if (!csvText) csvText = entry.content.toString("utf-8");
+                if (!csvText) { csvText = entry.content.toString("utf-8"); addedFromArchive += 1; }
                 continue;
               }
               const preset = toPresetFile(entry.filename, entry.content);
-              if (preset) presetFiles.push(preset);
+              if (preset) { presetFiles.push(preset); addedFromArchive += 1; }
             }
-            continue;
+            if (addedFromArchive > 0) continue;
           }
         }
 
@@ -314,6 +337,7 @@ export async function POST(req) {
     let updated = 0;
     const withoutFile = [];
 
+    const prepared = [];
     for (const item of items) {
       try {
         const existing = existingMap.get(item.id);
@@ -365,21 +389,7 @@ export async function POST(req) {
           merged.status = "INACTIVE";
         }
 
-        const saved = await ProductModel.create(merged);
-
-        if (existing) updated += 1;
-        else created += 1;
-        if (presetFiles.length > 0 && !merged.file) withoutFile.push(item.code);
-
-        results.push({
-          index: item.index,
-          line: item.line,
-          code: item.code,
-          name: merged.name,
-          action: existing ? "updated" : "created",
-          fileAttached: !!matchedFile || !!item.fileData,
-          product: saved
-        });
+        prepared.push({ item, merged, existing: !!existing, matchedFile });
       } catch (err) {
         errors.push({
           index: item.index,
@@ -389,6 +399,59 @@ export async function POST(req) {
           error: err.message
         });
       }
+    }
+
+    const savedById = new Map();
+    for (const batch of chunkArray(prepared, 10)) {
+      try {
+        const rows = await upsertBatch(batch.map((p) => p.merged));
+        for (const row of rows) savedById.set(row.id, row);
+      } catch (_) {
+        for (const p of batch) {
+          try {
+            const saved = await ProductModel.create(p.merged);
+            savedById.set(p.item.id, { __formatted: saved });
+          } catch (err) {
+            errors.push({
+              index: p.item.index,
+              line: p.item.line,
+              code: p.item.code,
+              name: p.item.name,
+              error: err.message
+            });
+            p.__failed = true;
+          }
+        }
+      }
+    }
+
+    for (const p of prepared) {
+      if (p.__failed) continue;
+      const savedRow = savedById.get(p.item.id);
+      if (!savedRow) {
+        errors.push({
+          index: p.item.index,
+          line: p.item.line,
+          code: p.item.code,
+          name: p.item.name,
+          error: "Gagal menyimpan produk."
+        });
+        continue;
+      }
+      const saved = savedRow.__formatted ? savedRow.__formatted : formatProduct(savedRow);
+      if (p.existing) updated += 1;
+      else created += 1;
+      if (presetFiles.length > 0 && !p.merged.file) withoutFile.push(p.item.code);
+
+      results.push({
+        index: p.item.index,
+        line: p.item.line,
+        code: p.item.code,
+        name: p.merged.name,
+        action: p.existing ? "updated" : "created",
+        fileAttached: !!p.matchedFile || !!p.item.fileData,
+        product: saved
+      });
     }
 
     return NextResponse.json({

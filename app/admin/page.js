@@ -121,6 +121,7 @@ function AdminDashboard({ token, onLogout }) {
   const [tab, setTab] = useState("products");
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [traffic, setTraffic] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editProduct, setEditProduct] = useState(null);
   const [showAddProduct, setShowAddProduct] = useState(false);
@@ -169,10 +170,20 @@ function AdminDashboard({ token, onLogout }) {
     }
   }, [token]);
 
+  const loadTraffic = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/api/admin/traffic`, { headers });
+      const data = await res.json();
+      setTraffic(data);
+    } catch (e) {
+      console.error(e);
+    }
+  }, [token]);
+
   useEffect(() => {
     setLoading(true);
-    Promise.all([loadProducts(), loadOrders()]).finally(() => setLoading(false));
-  }, [loadProducts, loadOrders]);
+    Promise.all([loadProducts(), loadOrders(), loadTraffic()]).finally(() => setLoading(false));
+  }, [loadProducts, loadOrders, loadTraffic]);
 
   const deleteProduct = async (id, name) => {
     if (!confirm(`Hapus preset "${name}"?`)) return;
@@ -738,7 +749,7 @@ function AdminDashboard({ token, onLogout }) {
             {/* TAB: STATS */}
             {tab === "stats" && (
               <div>
-                <div className={styles.tabHeader}><h2>Statistik Penjualan Toko</h2></div>
+                <div className={styles.tabHeader}><h2>Statistik Toko & Trafik</h2></div>
                 <div className={styles.statsGrid}>
                   <div className="card" style={{ padding: "24px" }}>
                     <div style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 8 }}>Total Omset Sukses</div>
@@ -759,6 +770,54 @@ function AdminDashboard({ token, onLogout }) {
                     </div>
                     <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 6 }}>per pembelian sukses</div>
                   </div>
+                </div>
+
+                <div style={{ marginTop: 28 }}>
+                  <div className={styles.tabHeader} style={{ marginBottom: 12 }}>
+                    <div>
+                      <h2 style={{ fontSize: 18 }}>Trafik Website</h2>
+                      <p style={{ fontSize: 13, color: "var(--text-3)", marginTop: 2 }}>
+                        Pengunjung unik dilacak berbasis ID anonim per perangkat/browser. Total kunjungan = jumlah page view yang tercatat.
+                      </p>
+                    </div>
+                  </div>
+                  <div className={styles.statsGrid}>
+                    <div className="card" style={{ padding: "24px" }}>
+                      <div style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 8 }}>Pengunjung Unik (Total)</div>
+                      <div style={{ fontSize: 28, fontWeight: 800, color: "var(--text)" }}>
+                        {(traffic?.uniqueVisitors ?? 0).toLocaleString("id-ID")}
+                      </div>
+                      <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 6 }}>perangkat/browser terdeteksi</div>
+                    </div>
+                    <div className="card" style={{ padding: "24px" }}>
+                      <div style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 8 }}>Total Kunjungan (Page View)</div>
+                      <div style={{ fontSize: 28, fontWeight: 800, color: "var(--text)" }}>
+                        {(traffic?.totalViews ?? 0).toLocaleString("id-ID")}
+                      </div>
+                      <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 6 }}>halaman dibuka tercatat</div>
+                    </div>
+                    <div className="card" style={{ padding: "24px" }}>
+                      <div style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 8 }}>Hari Ini</div>
+                      <div style={{ fontSize: 28, fontWeight: 800, color: "var(--text)" }}>
+                        {(traffic?.todayViews ?? 0).toLocaleString("id-ID")}
+                      </div>
+                      <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 6 }}>
+                        {(traffic?.todayUnique ?? 0).toLocaleString("id-ID")} pengunjung unik
+                      </div>
+                    </div>
+                    <div className="card" style={{ padding: "24px" }}>
+                      <div style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 8 }}>7 Hari Terakhir</div>
+                      <div style={{ fontSize: 28, fontWeight: 800, color: "var(--text)" }}>
+                        {(traffic?.weekViews ?? 0).toLocaleString("id-ID")}
+                      </div>
+                      <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 6 }}>
+                        {(traffic?.weekUnique ?? 0).toLocaleString("id-ID")} pengunjung unik
+                      </div>
+                    </div>
+                  </div>
+                  <p style={{ fontSize: 12, color: "var(--text-3)", marginTop: 10 }}>
+                    Catatan: data mulai tercatat sejak fitur pelacakan aktif. Kunjungan admin tidak dihitung.
+                  </p>
                 </div>
               </div>
             )}

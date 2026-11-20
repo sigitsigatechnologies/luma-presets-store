@@ -37,6 +37,8 @@ export default function BulkUploadModal({ token, onClose, onSaved }) {
   const [presetFiles, setPresetFiles] = useState([]);
   const [dragActive, setDragActive] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadPhase, setUploadPhase] = useState("idle");
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
 
@@ -87,6 +89,8 @@ export default function BulkUploadModal({ token, onClose, onSaved }) {
     }
 
     setLoading(true);
+    setUploadProgress(0);
+    setUploadPhase("uploading");
     setError("");
     setResult(null);
 
@@ -95,22 +99,44 @@ export default function BulkUploadModal({ token, onClose, onSaved }) {
       if (mode === "csv") formData.append("file", csvFile);
       presetFiles.forEach((file) => formData.append("presetFiles", file));
 
-      const response = await fetch("/api/products/bulk", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
+      const response = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/products/bulk");
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            setUploadProgress(Math.round((e.loaded / e.total) * 100));
+          }
+        };
+        xhr.upload.onload = () => {
+          setUploadProgress(100);
+          setUploadPhase("processing");
+        };
+        xhr.onload = () => {
+          let data = {};
+          try {
+            data = JSON.parse(xhr.responseText || "{}");
+          } catch {
+            data = {};
+          }
+          resolve({ status: xhr.status, ok: xhr.status >= 200 && xhr.status < 300, data });
+        };
+        xhr.onerror = () => reject(new Error("Gagal terhubung ke server."));
+        xhr.send(formData);
       });
 
-      const data = await response.json().catch(() => ({}));
+      const data = response.data;
       if (response.status === 401) {
         throw new Error("Sesi login kedaluwarsa. Muat ulang halaman admin lalu login kembali.");
       }
       if (!response.ok) throw new Error(data.error || "Gagal mengimpor produk.");
 
       setResult(data);
+      setUploadPhase("idle");
       if ((data.summary?.succeeded || 0) > 0) onSaved();
     } catch (err) {
       setError(err.message || "Gagal mengimpor produk.");
+      setUploadPhase("idle");
     } finally {
       setLoading(false);
     }
@@ -312,6 +338,34 @@ export default function BulkUploadModal({ token, onClose, onSaved }) {
                       </span>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {(loading || uploadPhase === "processing") && (
+              <div style={{ border: "1px solid var(--border, #e5e7eb)", borderRadius: 10, padding: 12, background: "var(--bg-surface, #fff)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, marginBottom: 6 }}>
+                  <span style={{ fontWeight: 600, color: "var(--text)" }}>
+                    {uploadPhase === "processing" ? "Memproses & menyimpan di server..." : "Mengunggah file..."}
+                  </span>
+                  <span style={{ color: "var(--text-2)" }}>
+                    {uploadPhase === "processing" ? "100%" : `${uploadProgress}%`}
+                  </span>
+                </div>
+                <div style={{ height: 10, borderRadius: 999, background: "var(--bg-2, #e5e7eb)", overflow: "hidden" }}>
+                  <div
+                    style={{
+                      height: "100%",
+                      width: uploadPhase === "processing" ? "100%" : `${uploadProgress}%`,
+                      background: "linear-gradient(90deg,#4f46e5,#7c3aed)",
+                      transition: "width 0.2s ease"
+                    }}
+                  />
+                </div>
+                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 6 }}>
+                  {uploadPhase === "processing"
+                    ? "Upload selesai. Server sedang mengekstrak dan menyimpan produk, mohon tunggu..."
+                    : `Mengirim ${formatSize(totalSize)} ke server.`}
                 </div>
               </div>
             )}
