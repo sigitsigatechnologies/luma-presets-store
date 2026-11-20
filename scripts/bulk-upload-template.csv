@@ -1,0 +1,5 @@
+code,name,subtitle,category,price,available,status,description,image
+LP01,Golden Tokyo Street,Warm sunset tones & film look,Aesthetic,29000,true,AVAILABLE,Cocok untuk foto outdoor golden hour,https://images.unsplash.com/photo-1234567890
+LP02,Dark Moody Portrait,Deep shadows and high contrast,Moody,35000,false,INACTIVE,Untuk studio portrait cinematic,https://images.unsplash.com/photo-2345678901
+LP03,Urban Neon Night,Futuristic city lights & cyberpunk,Urban,45000,true,AVAILABLE,Vibrant neon colors for night photography,https://images.unsplash.com/photo-3456789012
+

@@ -1,0 +1,98 @@
+.orderSummary {
+  background: var(--bg-2);
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.summaryTotal {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.inputError {
+  border-color: var(--error) !important;
+}
+
+.errMsg {
+  font-size: 12px;
+  color: var(--error);
+}
+
+.bundleSelectHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--bg-2);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.productPickList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.pickItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-2);
+  background: var(--bg-2);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  text-align: left;
+  width: 100%;
+  transition: all var(--transition);
+}
+
+.pickItem:hover {
+  border-color: var(--accent);
+  background: var(--bg-3);
+}
+
+.pickItemActive {
+  border-color: var(--accent);
+  background: rgba(99, 102, 241, 0.15);
+}
+
+.pickItemDisabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pickCheck {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-2);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.pickItemActive .pickCheck {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
