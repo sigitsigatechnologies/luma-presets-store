@@ -7,13 +7,15 @@
     "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start --port 3000",
-    "sync": "node scripts/sync-to-supabase.js",
-    "populate": "node scripts/populate-files-to-supabase.js"
+    "sync": "node scripts/sync-to-database.js",
+    "populate": "node scripts/populate-files-to-database.js",
+    "db:init": "node scripts/init-db.js",
+    "catalog": "node scripts/update-catalog.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.118.0",
     "dotenv": "^16.6.1",
     "next": "^15.3.3",
+    "pg": "^8.23.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

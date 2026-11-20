@@ -1,29 +1,16 @@
 /**
- * Populate all 72 Lightroom presets as base64 ZIP files directly into Supabase Cloud
- * Jalankan: node scripts/populate-files-to-supabase.js
+ * Populate semua preset Lightroom sebagai file Base64 ZIP ke PostgreSQL (Neon)
+ * Jalankan: node scripts/populate-files-to-database.js
  */
 import "dotenv/config";
-import { createClient } from "@supabase/supabase-js";
 import { seedProducts } from "../lib/seed-data.js";
 import { createZip } from "../lib/utils/zip.js";
+import { pool, query } from "../lib/config/database.js";
 import crypto from "node:crypto";
-
-const SUPABASE_URL = (process.env.SUPABASE_URL || "").trim();
-const SUPABASE_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || "").trim();
-
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error("❌ SUPABASE_URL atau SUPABASE_KEY belum diisi di .env!");
-  process.exit(1);
-}
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false }
-});
 
 function generateXmpContent(code, name, category) {
   const uuid = crypto.randomUUID().toUpperCase();
-  
-  // Category-specific Lightroom parameters for authentic color grading
+
   let temp = "+5";
   let tint = "+3";
   let exposure = "+0.20";
@@ -119,13 +106,13 @@ Setelah mengaplikasikan preset, cukup sesuaikan slider:
 
 Terima kasih telah memilih LUMA Presets!
 Bantuan Customer Service via WhatsApp: https://lumapresets.com
-========================================================
+=======================================================
 `;
 }
 
 async function main() {
-  console.log("⚡ Menghubungkan ke Supabase Cloud (" + SUPABASE_URL + ")...");
-  console.log(`📦 Memulai pembuatan binary ZIP XMP & injeksi Base64 ke Supabase untuk ${seedProducts.length} preset...`);
+  console.log("⚡ Menghubungkan ke PostgreSQL (Neon)...");
+  console.log(`📦 Membuat binary ZIP XMP & menyimpan Base64 untuk ${seedProducts.length} preset...`);
 
   let count = 0;
   for (const p of seedProducts) {
@@ -139,22 +126,23 @@ async function main() {
 
     const base64DataUri = `data:application/zip;base64,${zipBuffer.toString("base64")}`;
 
-    const { error } = await supabase
-      .from("products")
-      .update({ file: base64DataUri })
-      .eq("id", p.id);
-
-    if (error) {
-      console.error(`   ❌ Gagal update file ${p.id} (${p.name}):`, error.message);
-    } else {
+    try {
+      await query("UPDATE products SET file = $1 WHERE id = $2", [base64DataUri, p.id]);
       count++;
       if (count % 10 === 0 || count === seedProducts.length) {
-        console.log(`   ✅ Tersimpan di DB Supabase: ${count}/${seedProducts.length} preset`);
+        console.log(`   ✅ Tersimpan di database: ${count}/${seedProducts.length} preset`);
       }
+    } catch (err) {
+      console.error(`   ❌ Gagal update file ${p.id} (${p.name}):`, err.message);
     }
   }
 
-  console.log(`\n🎉 SELESAI! Seluruh ${count} preset kini memiliki binary ZIP tersimpan 100% sebagai Base64 di database Supabase Cloud!`);
+  console.log(`\n🎉 SELESAI! ${count} preset kini memiliki binary ZIP tersimpan sebagai Base64 di database Neon.`);
+  await pool.end();
 }
 
-main().catch(console.error);
+main().catch(async (err) => {
+  console.error("❌ Populate gagal:", err.message);
+  await pool.end().catch(() => {});
+  process.exit(1);
+});

@@ -1,6 +1,6 @@
 -- =====================================================
--- LUMA PRESETS — Supabase Database Schema
--- Jalankan SQL ini di Supabase Dashboard > SQL Editor
+-- LUMA PRESETS — Neon PostgreSQL Schema
+-- Jalankan di Neon SQL Editor, atau: npm run db:init
 -- =====================================================
 
 -- 1. Tabel Produk
@@ -57,10 +57,6 @@ CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_access_codes_product ON access_codes(product_id);
 CREATE INDEX IF NOT EXISTS idx_access_codes_order ON access_codes(order_id);
 
--- 5. Row Level Security (opsional, bisa diaktifkan sesuai kebutuhan)
--- ALTER TABLE products ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE access_codes ENABLE ROW LEVEL SECURITY;
-
--- Policy: products bisa dibaca publik
--- CREATE POLICY "Products are viewable by everyone" ON products FOR SELECT USING (true);
+-- 5. Kolom tambahan untuk database lama (idempotent)
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS bundle_items TEXT;
+ALTER TABLE access_codes ADD COLUMN IF NOT EXISTS bundle_items TEXT;

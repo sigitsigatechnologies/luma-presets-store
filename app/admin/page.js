@@ -390,7 +390,7 @@ function AdminDashboard({ token, onLogout }) {
                   </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
                     <button className="btn btn-outline" onClick={() => setShowBulkUpload(true)}>
-                      Import CSV
+                      Bulk Upload
                     </button>
                     <button className="btn btn-primary" onClick={() => setShowAddProduct(true)}>
                       + Tambah Preset Baru
@@ -779,7 +779,7 @@ function AdminDashboard({ token, onLogout }) {
         <BulkUploadModal
           token={token}
           onClose={() => setShowBulkUpload(false)}
-          onSaved={() => { loadProducts(); notify("Import CSV selesai."); }}
+          onSaved={() => { loadProducts(); notify("Bulk upload selesai."); }}
         />
       )}
     </div>

@@ -53,7 +53,8 @@ export default function CheckoutModal({ product, bundleTier, products = [], onCl
   const isBundle = !!bundleTier;
   const [step, setStep] = useState(isBundle ? "select" : "form"); // "select" | "form" | "waiting"
   const [selectedIds, setSelectedIds] = useState([]);
-  const [form, setForm] = useState({ name: "", phone: "", email: "" });
+  const [pickSearch, setPickSearch] = useState("");
+  const [form, setForm] = useState({ name: "", phone: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -213,7 +214,6 @@ export default function CheckoutModal({ product, bundleTier, products = [], onCl
     const e = {};
     if (!form.name.trim()) e.name = "Nama wajib diisi";
     if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 9) e.phone = "Nomor WhatsApp tidak valid (min 9 digit)";
-    if (!form.email.trim() || !form.email.includes("@")) e.email = "Email tidak valid";
     return e;
   };
 
@@ -231,7 +231,7 @@ export default function CheckoutModal({ product, bundleTier, products = [], onCl
       const body = {
         customerName: form.name.trim(),
         customerPhone: form.phone.trim(),
-        customerEmail: form.email.trim(),
+        customerEmail: ""
       };
 
       if (isBundle) {
@@ -331,25 +331,47 @@ export default function CheckoutModal({ product, bundleTier, products = [], onCl
             </div>
 
             {bundleTier.id !== "bundle-all" && (
-              <div className={styles.productPickList}>
-                {products.map((p) => {
-                  const picked = selectedIds.includes(p.id);
-                  const disabled = !picked && selectedIds.length >= maxSelect;
-                  return (
-                    <button
-                      key={p.id}
-                      className={`${styles.pickItem} ${picked ? styles.pickItemActive : ""} ${disabled ? styles.pickItemDisabled : ""}`}
-                      onClick={() => !disabled && toggleProduct(p.id)}
-                    >
-                      <span className={styles.pickCheck}>{picked ? "✓" : ""}</span>
-                      <span>{p.name}</span>
-                      <span style={{ fontSize: 12, color: "var(--text-3)", marginLeft: "auto" }}>
-                        Rp {(Number(p.price) || 0).toLocaleString("id-ID")}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+              <>
+                <input
+                  className="form-control"
+                  placeholder="Cari preset favoritmu..."
+                  value={pickSearch}
+                  onChange={(e) => setPickSearch(e.target.value)}
+                  style={{ marginBottom: 10 }}
+                />
+                <div className={styles.productPickList}>
+                  {products
+                    .filter((p) => {
+                      const q = pickSearch.trim().toLowerCase();
+                      return p.name.toLowerCase().includes(q) || (p.category || "").toLowerCase().includes(q);
+                    })
+                    .map((p) => {
+                      const picked = selectedIds.includes(p.id);
+                      const disabled = !picked && selectedIds.length >= maxSelect;
+                      return (
+                        <button
+                          key={p.id}
+                          className={`${styles.pickItem} ${picked ? styles.pickItemActive : ""} ${disabled ? styles.pickItemDisabled : ""}`}
+                          onClick={() => !disabled && toggleProduct(p.id)}
+                        >
+                          <span className={styles.pickCheck}>{picked ? "✓" : ""}</span>
+                          <span>{p.name}</span>
+                          <span style={{ fontSize: 12, color: "var(--text-3)", marginLeft: "auto" }}>
+                            {p.category || "Umum"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  {products.filter((p) => {
+                    const q = pickSearch.trim().toLowerCase();
+                    return p.name.toLowerCase().includes(q) || (p.category || "").toLowerCase().includes(q);
+                  }).length === 0 && (
+                    <div style={{ padding: 20, textAlign: "center", color: "var(--text-3)", fontSize: 13 }}>
+                      Preset tidak ditemukan.
+                    </div>
+                  )}
+                </div>
+              </>
             )}
 
             <div className="modal-footer" style={{ margin: "0 -24px -24px", borderTop: "1px solid var(--border)" }}>
@@ -369,37 +391,33 @@ export default function CheckoutModal({ product, bundleTier, products = [], onCl
         {step === "form" && (
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
-              {/* Order summary */}
               <div className={styles.orderSummary}>
-                <div className={styles.summaryRow}>
-                  <span>{productName}</span>
-                  <span style={{ fontWeight: 600 }}>Rp {price.toLocaleString("id-ID")}</span>
-                </div>
-                {isBundle && bundleTier.id !== "bundle-all" && selectedIds.length > 0 && (
-                  <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>
-                    {selectedIds.length} preset pilihan
-                  </div>
+                {!isBundle && product?.image && (
+                  <img src={product.image} alt={product.name} className={styles.summaryImage} />
                 )}
-                <div className="divider" style={{ margin: "12px 0" }} />
-                <div className={`${styles.summaryRow} ${styles.summaryTotal}`}>
-                  <span>Total Pembayaran</span>
-                  <span style={{ color: "var(--accent-glow, #111)", fontSize: 18 }}>Rp {price.toLocaleString("id-ID")}</span>
+                <div className={styles.summaryContent}>
+                  <div className={styles.summaryLabel}>{isBundle ? "Paket dipilih" : "Preset dipilih"}</div>
+                  <div className={styles.summaryProductName}>{productName}</div>
+                  {isBundle && bundleTier.id !== "bundle-all" && (
+                    <div className={styles.summaryMeta}>{selectedIds.length} preset pilihan</div>
+                  )}
+                  <div className={styles.summaryPrice}>Rp {price.toLocaleString("id-ID")}</div>
                 </div>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 20 }}>
                 <div className="form-group">
-                  <label>Nama Lengkap</label>
+                  <label>Nama kamu</label>
                   <input
                     className={`form-control ${errors.name ? styles.inputError : ""}`}
-                    placeholder="Nama kamu"
+                    placeholder="Nama lengkap"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                   />
                   {errors.name && <span className={styles.errMsg}>{errors.name}</span>}
                 </div>
                 <div className="form-group">
-                  <label>Nomor WhatsApp (Aktif untuk Pengiriman File)</label>
+                  <label>Nomor WhatsApp</label>
                   <input
                     className={`form-control ${errors.phone ? styles.inputError : ""}`}
                     placeholder="081234567890"
@@ -408,17 +426,7 @@ export default function CheckoutModal({ product, bundleTier, products = [], onCl
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   />
                   {errors.phone && <span className={styles.errMsg}>{errors.phone}</span>}
-                </div>
-                <div className="form-group">
-                  <label>Email</label>
-                  <input
-                    className={`form-control ${errors.email ? styles.inputError : ""}`}
-                    placeholder="nama@email.com"
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  />
-                  {errors.email && <span className={styles.errMsg}>{errors.email}</span>}
+                  <span className={styles.fieldHint}>Kode akses & link download dikirim ke nomor ini.</span>
                 </div>
 
                 {serverError && (
@@ -507,21 +515,24 @@ export default function CheckoutModal({ product, bundleTier, products = [], onCl
                 Buka Kembali Pop-Up Midtrans
               </button>
 
-              <button
-                type="button"
-                className="btn"
-                onClick={handleSimulatePayment}
-                disabled={loading}
-                style={{
-                  width: "100%",
-                  fontSize: 12,
-                  color: "#6b7280",
-                  background: "var(--bg-3)",
-                  border: "1px dashed var(--border-2)"
-                }}
-              >
-                {loading ? "Memproses…" : "⚡ Simulasi Bayar Berhasil (Sandbox Mode)"}
-              </button>
+              {!IS_PRODUCTION && (
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={handleSimulatePayment}
+                  disabled={loading}
+                  style={{
+                    width: "100%",
+                    fontSize: 11,
+                    color: "var(--text-3)",
+                    background: "transparent",
+                    border: "none",
+                    textDecoration: "underline"
+                  }}
+                >
+                  {loading ? "Memproses…" : "Simulasi pembayaran (mode testing)"}
+                </button>
+              )}
 
               <button
                 className="btn"

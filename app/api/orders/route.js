@@ -20,7 +20,7 @@ export async function POST(req) {
 
     if (!name) return NextResponse.json({ error: "Nama lengkap wajib diisi." }, { status: 400 });
     if (!phone || phone.length < 9) return NextResponse.json({ error: "Nomor WhatsApp wajib diisi (min 9 digit)." }, { status: 400 });
-    if (!email || !email.includes("@")) return NextResponse.json({ error: "Email wajib diisi." }, { status: 400 });
+    if (email && !email.includes("@")) return NextResponse.json({ error: "Format email tidak valid." }, { status: 400 });
 
     let orderProductId = productId;
     let orderProductName = "";
