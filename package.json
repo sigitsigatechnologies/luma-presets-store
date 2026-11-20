@@ -13,6 +13,7 @@
     "catalog": "node scripts/update-catalog.js"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "dotenv": "^16.6.1",
     "next": "^15.3.3",
     "pg": "^8.23.1",

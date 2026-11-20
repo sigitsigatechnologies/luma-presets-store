@@ -620,13 +620,16 @@
 /* ── Bundles ── */
 .bundleSection {
   background: #f8f5ff;
+  content-visibility: visible;
+  contain-intrinsic-size: auto;
 }
 
 .bundleGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  padding-top: 12px;
+  gap: 16px;
+  padding-top: 16px;
+  overflow: visible;
 }
 
 .bundleCard {
