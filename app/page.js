@@ -1,28 +1,55 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
+import {
+  ArrowDownTrayIcon,
+  MagnifyingGlassIcon,
+  ArrowsRightLeftIcon,
+  SparklesIcon,
+  FilmIcon,
+  UserIcon,
+  SunIcon,
+  BuildingOffice2Icon,
+  BoltIcon,
+  PaperAirplaneIcon,
+  HeartIcon,
+  ClockIcon,
+  AdjustmentsHorizontalIcon,
+  MoonIcon,
+  SwatchIcon,
+  Squares2X2Icon,
+  DevicePhoneMobileIcon,
+  ComputerDesktopIcon,
+  ArrowPathIcon,
+  ShieldCheckIcon,
+  ChatBubbleLeftRightIcon,
+  PlusIcon,
+  MinusIcon,
+  Bars3Icon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import styles from "./page.module.css";
 import CheckoutModal from "./components/CheckoutModal";
 import DownloadPortal from "./components/DownloadPortal";
-import PaymentSuccessModal from "./components/PaymentSuccessModal";
 
 const API = "";
 const PRODUCTS_PER_PAGE = 12;
 
 const CATEGORY_META = {
-  Aesthetic: { icon: "✨", desc: "Tone lembut & pastel" },
-  Cinematic: { icon: "🎬", desc: "Warna dramatis ala film" },
-  Film: { icon: "🎞️", desc: "Karakter analog vintage" },
-  Portrait: { icon: "👤", desc: "Skin tone natural & glowing" },
-  Nature: { icon: "🌿", desc: "Hijau & langit yang kaya" },
-  Urban: { icon: "🏙️", desc: "Moody & neon street" },
-  HDR: { icon: "⚡", desc: "Detail tajam & kontras" },
-  Travel: { icon: "✈️", desc: "Cerah untuk liburan" },
-  Lifestyle: { icon: "☕", desc: "Warm & minimalis" },
-  Vintage: { icon: "📻", desc: "Nostalgia 70-an & 90-an" },
-  "B&W": { icon: "◐", desc: "Monokrom klasik" },
-  Moody: { icon: "🌑", desc: "Gelap & dramatis" },
-  General: { icon: "🎨", desc: "Serbaguna" }
+  Aesthetic: { icon: SparklesIcon, desc: "Tone lembut & pastel" },
+  Cinematic: { icon: FilmIcon, desc: "Warna dramatis ala film" },
+  Film: { icon: FilmIcon, desc: "Karakter analog vintage" },
+  Portrait: { icon: UserIcon, desc: "Skin tone natural & glowing" },
+  Nature: { icon: SunIcon, desc: "Hijau & langit yang kaya" },
+  Urban: { icon: BuildingOffice2Icon, desc: "Moody & neon street" },
+  HDR: { icon: BoltIcon, desc: "Detail tajam & kontras" },
+  Travel: { icon: PaperAirplaneIcon, desc: "Cerah untuk liburan" },
+  Lifestyle: { icon: HeartIcon, desc: "Warm & minimalis" },
+  Vintage: { icon: ClockIcon, desc: "Nostalgia 70-an & 90-an" },
+  "B&W": { icon: AdjustmentsHorizontalIcon, desc: "Monokrom klasik" },
+  Moody: { icon: MoonIcon, desc: "Gelap & dramatis" },
+  General: { icon: SwatchIcon, desc: "Serbaguna" },
 };
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=900&q=80";
@@ -30,20 +57,20 @@ const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1542038784456-1ea8e935
 const FAQ_ITEMS = [
   {
     q: "Perlu langganan Lightroom berbayar?",
-    a: "Tidak. Preset LUMA bisa dipakai di Adobe Lightroom Mobile versi gratis (iOS & Android), juga Lightroom Desktop/Classic."
+    a: "Tidak. Preset LUMA bisa dipakai di Adobe Lightroom Mobile versi gratis (iOS & Android), juga Lightroom Desktop/Classic.",
   },
   {
     q: "Format file apa yang saya dapat?",
-    a: "Setiap preset tersedia dalam format .XMP (Lightroom Desktop/Classic) dan siap diimport ke Lightroom Mobile."
+    a: "Setiap preset tersedia dalam format .XMP (Lightroom Desktop/Classic) dan siap diimport ke Lightroom Mobile.",
   },
   {
     q: "Bagaimana cara menerima file?",
-    a: "Setelah pembayaran berhasil, kode akses dan link unduhan otomatis dikirim ke WhatsApp kamu dalam hitungan detik."
+    a: "Setelah pembayaran berhasil, kode akses dan link unduhan otomatis dikirim ke WhatsApp kamu dalam hitungan detik.",
   },
   {
     q: "Bisa unduh ulang kalau ganti HP?",
-    a: "Bisa. Akses berlaku seumur hidup. Cukup buka Portal Unduh dan masukkan kode akses kamu kapan saja."
-  }
+    a: "Bisa. Akses berlaku seumur hidup. Cukup buka Portal Unduh dan masukkan kode akses kamu kapan saja.",
+  },
 ];
 
 function scrollToId(id) {
@@ -65,14 +92,18 @@ function toBeforeImage(url) {
   }
 }
 
+function CatIcon({ name, className = "h-4 w-4" }) {
+  const Icon = CATEGORY_META[name]?.icon || Squares2X2Icon;
+  return <Icon className={className} aria-hidden="true" />;
+}
+
 export default function HomePage() {
+  const router = useRouter();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [checkoutProduct, setCheckoutProduct] = useState(null);
   const [bundleCheckout, setBundleCheckout] = useState(null);
   const [showDownload, setShowDownload] = useState(false);
-  const [downloadInitialCode, setDownloadInitialCode] = useState("");
-  const [successOrder, setSuccessOrder] = useState(null);
   const [bundleTiers, setBundleTiers] = useState([]);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -83,6 +114,9 @@ export default function HomePage() {
   const [sliderPos, setSliderPos] = useState(55);
   const sliderRef = useRef(null);
   const isDraggingRef = useRef(false);
+  const sliderRectRef = useRef(null);
+  const sliderRafRef = useRef(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     loadProducts();
@@ -92,15 +126,29 @@ export default function HomePage() {
     if (params.get("paid") === "true" || params.get("order_id")) {
       const orderId = params.get("orderId") || params.get("order_id");
       if (orderId) {
-        fetch(`${API}/api/orders/${orderId}/check-status`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.status === "PAID") setSuccessOrder(data);
-          })
-          .catch(() => {});
+        router.replace(`/order?orderId=${encodeURIComponent(orderId)}`);
+        return;
       }
       window.history.replaceState({}, "", window.location.pathname);
     }
+  }, [router]);
+
+  useEffect(() => {
+    const stopDrag = () => {
+      isDraggingRef.current = false;
+      sliderRectRef.current = null;
+      if (sliderRafRef.current) cancelAnimationFrame(sliderRafRef.current);
+      sliderRafRef.current = null;
+    };
+    window.addEventListener("mouseup", stopDrag);
+    window.addEventListener("touchend", stopDrag);
+    window.addEventListener("touchcancel", stopDrag);
+    return () => {
+      window.removeEventListener("mouseup", stopDrag);
+      window.removeEventListener("touchend", stopDrag);
+      window.removeEventListener("touchcancel", stopDrag);
+      if (sliderRafRef.current) cancelAnimationFrame(sliderRafRef.current);
+    };
   }, []);
 
   const loadProducts = async () => {
@@ -166,23 +214,34 @@ export default function HomePage() {
   const heroAfter = featuredProduct?.image || FALLBACK_IMAGE;
   const heroBefore = toBeforeImage(heroAfter);
 
-  const handleSliderMove = (clientX) => {
+  const startSliderDrag = (clientX) => {
     if (!sliderRef.current) return;
-    const rect = sliderRef.current.getBoundingClientRect();
+    isDraggingRef.current = true;
+    sliderRectRef.current = sliderRef.current.getBoundingClientRect();
+    updateSliderPos(clientX);
+  };
+
+  const updateSliderPos = (clientX) => {
+    const rect = sliderRectRef.current || (sliderRef.current ? sliderRef.current.getBoundingClientRect() : null);
+    if (!rect) return;
     const percent = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
-    setSliderPos(percent);
+    if (sliderRafRef.current) cancelAnimationFrame(sliderRafRef.current);
+    sliderRafRef.current = requestAnimationFrame(() => {
+      setSliderPos(percent);
+      sliderRafRef.current = null;
+    });
   };
 
   const openDownload = () => {
-    setDownloadInitialCode("");
     setShowDownload(true);
   };
 
   return (
     <div
       className={styles.page}
-      onMouseUp={() => { isDraggingRef.current = false; }}
-      onMouseMove={(e) => { if (isDraggingRef.current) handleSliderMove(e.clientX); }}
+      onMouseMove={(e) => {
+        if (isDraggingRef.current) updateSliderPos(e.clientX);
+      }}
     >
       <div className={styles.promoBar}>
         Semua preset <strong>Rp 10.000</strong> · Garansi akses seumur hidup · Kirim otomatis ke WhatsApp
@@ -191,20 +250,84 @@ export default function HomePage() {
       <header className={styles.nav}>
         <div className="container">
           <div className={styles.navInner}>
-            <button className={styles.logo} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            <button
+              className={styles.logo}
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                setMobileMenuOpen(false);
+              }}
+            >
               LUMA <span className={styles.logoBadge}>Presets</span>
             </button>
+
             <nav className={styles.navLinks}>
-              <button className={styles.navLink} onClick={() => scrollToId("products")}>Preset</button>
-              <button className={styles.navLink} onClick={() => scrollToId("bundles")}>Paket Hemat</button>
+              <button className={styles.navLink} onClick={() => scrollToId("products")}>
+                Preset
+              </button>
+              <button className={styles.navLink} onClick={() => scrollToId("bundles")}>
+                Paket Hemat
+              </button>
+              <button className={styles.navLink} onClick={() => router.push("/order")}>
+                Cek Pesanan
+              </button>
               <button className={styles.navCta} onClick={openDownload}>
-                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
+                <ArrowDownTrayIcon className="h-4 w-4" aria-hidden="true" />
                 Portal Unduh
               </button>
             </nav>
+
+            <button
+              type="button"
+              className={styles.menuToggle}
+              onClick={() => setMobileMenuOpen((v) => !v)}
+              aria-label={mobileMenuOpen ? "Tutup menu" : "Buka menu"}
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}
+            </button>
           </div>
+
+          {mobileMenuOpen && (
+            <div className={styles.mobileMenu}>
+              <button
+                className={styles.mobileMenuItem}
+                onClick={() => {
+                  scrollToId("products");
+                  setMobileMenuOpen(false);
+                }}
+              >
+                Preset
+              </button>
+              <button
+                className={styles.mobileMenuItem}
+                onClick={() => {
+                  scrollToId("bundles");
+                  setMobileMenuOpen(false);
+                }}
+              >
+                Paket Hemat
+              </button>
+              <button
+                className={styles.mobileMenuItem}
+                onClick={() => {
+                  router.push("/order");
+                  setMobileMenuOpen(false);
+                }}
+              >
+                Cek Pesanan
+              </button>
+              <button
+                className={`${styles.mobileMenuItem} ${styles.mobileMenuPrimary}`}
+                onClick={() => {
+                  openDownload();
+                  setMobileMenuOpen(false);
+                }}
+              >
+                <ArrowDownTrayIcon className="h-4 w-4" aria-hidden="true" />
+                Portal Unduh
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
@@ -217,8 +340,8 @@ export default function HomePage() {
                 Foto biasa jadi <span className={styles.heroHighlight}>sinematik</span> dalam 1 klik.
               </h1>
               <p className={styles.heroSub}>
-                {availableProducts.length || 72} preset siap pakai untuk iPhone, Android, dan Desktop.
-                Sekali bayar Rp 10.000, kode akses langsung dikirim ke WhatsApp.
+                {availableProducts.length || 72} preset siap pakai untuk iPhone, Android, dan Desktop. Sekali bayar{" "}
+                <span className={styles.priceHighlight}>Rp 10.000</span>, kode akses langsung dikirim ke WhatsApp.
               </p>
               <div className={styles.heroCta}>
                 <button className="btn btn-primary btn-lg" onClick={() => scrollToId("products")}>
@@ -229,13 +352,21 @@ export default function HomePage() {
                 </button>
               </div>
               <div className={styles.heroTrust}>
-                <span>⚡ 1-klik apply</span>
-                <span>📱 iOS & Android</span>
-                <span>💻 Mac & Windows</span>
-                <span>♾️ Akses seumur hidup</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <BoltIcon className="h-4 w-4" aria-hidden="true" /> 1-klik apply
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <DevicePhoneMobileIcon className="h-4 w-4" aria-hidden="true" /> iOS &amp; Android
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <ComputerDesktopIcon className="h-4 w-4" aria-hidden="true" /> Mac &amp; Windows
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <ArrowPathIcon className="h-4 w-4" aria-hidden="true" /> Akses seumur hidup
+                </span>
               </div>
               <div className={styles.heroRating}>
-                <span>★★★★★</span>
+                <span className="text-amber-500 tracking-wide">★★★★★</span>
                 <span>4.9/5 dari 1.850+ kreator</span>
               </div>
             </div>
@@ -249,21 +380,32 @@ export default function HomePage() {
                 <div
                   className={styles.sliderContainer}
                   ref={sliderRef}
-                  onMouseDown={() => { isDraggingRef.current = true; }}
-                  onTouchMove={(e) => { if (e.touches[0]) handleSliderMove(e.touches[0].clientX); }}
+                  onMouseDown={(e) => startSliderDrag(e.clientX)}
+                  onTouchStart={(e) => {
+                    if (e.touches[0]) startSliderDrag(e.touches[0].clientX);
+                  }}
+                  onTouchMove={(e) => {
+                    if (isDraggingRef.current && e.touches[0]) updateSliderPos(e.touches[0].clientX);
+                  }}
                 >
-                  <img src={heroAfter} alt="Sesudah preset" className={styles.sliderImgAfter} />
+                  <img
+                    src={heroAfter}
+                    alt="Sesudah preset"
+                    className={styles.sliderImgAfter}
+                    fetchPriority="high"
+                    decoding="async"
+                  />
                   <img
                     src={heroBefore}
                     alt="Sebelum preset"
                     className={styles.sliderImgBefore}
                     style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className={styles.sliderDivider} style={{ left: `${sliderPos}%` }}>
                     <div className={styles.sliderHandle}>
-                      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 9l4-4 4 4m0 6l-4 4-4-4" transform="rotate(90 12 12)" />
-                      </svg>
+                      <ArrowsRightLeftIcon className="h-4 w-4" aria-hidden="true" />
                     </div>
                   </div>
                   <span className={styles.badgeBefore}>Sebelum</span>
@@ -289,9 +431,7 @@ export default function HomePage() {
 
           <div className={styles.productsToolbar}>
             <div className={styles.searchBox}>
-              <svg className={styles.searchIcon} width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <MagnifyingGlassIcon className={styles.searchIcon + " h-4 w-4"} aria-hidden="true" />
               <input
                 className={styles.searchInput}
                 placeholder="Cari preset (Creamy, Film, Sunset...)"
@@ -309,7 +449,14 @@ export default function HomePage() {
                     className={`${styles.categoryPill} ${selectedCategory === cat ? styles.categoryPillActive : ""}`}
                     onClick={() => setSelectedCategory(cat)}
                   >
-                    <span>{cat === "Semua" ? "Semua" : CATEGORY_META[cat]?.icon || "📁"} {cat}</span>
+                    <span className="inline-flex items-center gap-1.5">
+                      {cat === "Semua" ? (
+                        <Squares2X2Icon className="h-4 w-4" aria-hidden="true" />
+                      ) : (
+                        <CatIcon name={cat} className="h-4 w-4" />
+                      )}
+                      {cat}
+                    </span>
                     <span className={styles.categoryCount}>{count}</span>
                   </button>
                 );
@@ -407,21 +554,27 @@ export default function HomePage() {
         <div className="container">
           <div className={styles.trustGrid}>
             <div className={styles.trustItem}>
-              <span className={styles.trustIcon}>🔒</span>
+              <span className={styles.trustIcon}>
+                <ShieldCheckIcon className="h-5 w-5 text-gray-700" aria-hidden="true" />
+              </span>
               <div>
                 <strong>Pembayaran aman</strong>
                 <p>QRIS, Virtual Account, dan kartu via Midtrans.</p>
               </div>
             </div>
             <div className={styles.trustItem}>
-              <span className={styles.trustIcon}>💬</span>
+              <span className={styles.trustIcon}>
+                <ChatBubbleLeftRightIcon className="h-5 w-5 text-gray-700" aria-hidden="true" />
+              </span>
               <div>
                 <strong>Kirim otomatis</strong>
-                <p>Kode & link unduhan langsung masuk WhatsApp.</p>
+                <p>Kode &amp; link unduhan langsung masuk WhatsApp.</p>
               </div>
             </div>
             <div className={styles.trustItem}>
-              <span className={styles.trustIcon}>♾️</span>
+              <span className={styles.trustIcon}>
+                <ArrowPathIcon className="h-5 w-5 text-gray-700" aria-hidden="true" />
+              </span>
               <div>
                 <strong>Akses seumur hidup</strong>
                 <p>Unduh ulang kapan saja lewat Portal Unduh.</p>
@@ -444,7 +597,13 @@ export default function HomePage() {
                 <div key={faq.q} className={styles.faqItem}>
                   <button className={styles.faqQuestion} onClick={() => setOpenFaq(isOpen ? null : index)}>
                     <span>{faq.q}</span>
-                    <span>{isOpen ? "−" : "+"}</span>
+                    <span className="text-gray-400">
+                      {isOpen ? (
+                        <MinusIcon className="h-5 w-5" aria-hidden="true" />
+                      ) : (
+                        <PlusIcon className="h-5 w-5" aria-hidden="true" />
+                      )}
+                    </span>
                   </button>
                   {isOpen && <div className={styles.faqAnswer}>{faq.a}</div>}
                 </div>
@@ -464,10 +623,13 @@ export default function HomePage() {
             <div className={styles.footerLinks}>
               <button onClick={() => scrollToId("products")}>Preset</button>
               <button onClick={() => scrollToId("bundles")}>Paket</button>
+              <button onClick={() => router.push("/order")}>Cek Pesanan</button>
               <button onClick={openDownload}>Portal Unduh</button>
             </div>
           </div>
-          <p className={styles.footerLegal}>© {new Date().getFullYear()} LUMA Presets. Adobe Lightroom® adalah merek dagang Adobe Inc.</p>
+          <p className={styles.footerLegal}>
+            © {new Date().getFullYear()} LUMA Presets. Adobe Lightroom® adalah merek dagang Adobe Inc.
+          </p>
         </div>
       </footer>
 
@@ -478,7 +640,7 @@ export default function HomePage() {
           onSuccess={(order) => {
             setCheckoutProduct(null);
             setBundleCheckout(null);
-            setSuccessOrder(order);
+            router.push(`/order?orderId=${encodeURIComponent(order.orderId || "")}`);
           }}
         />
       )}
@@ -492,32 +654,12 @@ export default function HomePage() {
           onSuccess={(order) => {
             setCheckoutProduct(null);
             setBundleCheckout(null);
-            setSuccessOrder(order);
+            router.push(`/order?orderId=${encodeURIComponent(order.orderId || "")}`);
           }}
         />
       )}
 
-      {showDownload && (
-        <DownloadPortal
-          initialCode={downloadInitialCode}
-          onClose={() => {
-            setShowDownload(false);
-            setDownloadInitialCode("");
-          }}
-        />
-      )}
-
-      {successOrder && (
-        <PaymentSuccessModal
-          order={successOrder}
-          onClose={() => setSuccessOrder(null)}
-          onDownload={(code) => {
-            setDownloadInitialCode(code || successOrder.accessCode || "");
-            setSuccessOrder(null);
-            setShowDownload(true);
-          }}
-        />
-      )}
+      {showDownload && <DownloadPortal initialCode="" onClose={() => setShowDownload(false)} />}
     </div>
   );
 }
@@ -534,17 +676,22 @@ function ProductCard({ product, onBuy }) {
           alt={product.name}
           className={styles.productImg}
           loading="lazy"
-          onError={(event) => { event.target.src = fallback; }}
+          decoding="async"
+          onError={(event) => {
+            event.target.src = fallback;
+          }}
         />
         <span className={styles.productCategory}>{product.category || "General"}</span>
-        {product.hasFile && <span className={styles.productReady}>Siap unduh</span>}
+        <span className={styles.productReady}>Siap unduh</span>
       </button>
       <div className={styles.productBody}>
         <h3 className={styles.productName}>{product.name}</h3>
-        <p className={styles.productSubtitle}>{product.subtitle || "Lightroom Preset"}</p>
+        <p className={styles.productSubtitle}>{product.subtitle || "Preset warna untuk berbagai suasana"}</p>
         <div className={styles.productFooter}>
           <span className={styles.productPrice}>Rp {price.toLocaleString("id-ID")}</span>
-          <button className="btn btn-primary btn-sm" onClick={onBuy}>Beli</button>
+          <button className="btn btn-primary btn-sm" onClick={onBuy}>
+            Beli
+          </button>
         </div>
       </div>
     </article>

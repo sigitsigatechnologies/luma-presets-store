@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { XMarkIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 
 const API = "";
 
@@ -67,9 +68,7 @@ export default function DownloadPortal({ initialCode = "", onClose }) {
         <div className="modal-header">
           <h2>Download Preset</h2>
           <button className="btn-icon" onClick={onClose} aria-label="Tutup">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <XMarkIcon className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
@@ -96,9 +95,7 @@ export default function DownloadPortal({ initialCode = "", onClose }) {
           ) : (
             <div>
               <div className="alert alert-success" style={{ marginBottom: 20 }}>
-                <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
+                <CheckCircleIcon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
                 Kode valid! Siap diunduh.
               </div>
 
@@ -120,7 +117,7 @@ export default function DownloadPortal({ initialCode = "", onClose }) {
                     onClick={() => handleDownload()}
                     disabled={downloading === "main"}
                   >
-                    {downloading === "main" ? <><span className="spinner" /> Menyiapkan…</> : "⬇ Unduh Semua (Master ZIP)"}
+                    {downloading === "main" ? <><span className="spinner" /> Menyiapkan…</> : "Unduh Semua (Master ZIP)"}
                   </button>
                   <p style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 12 }}>Atau unduh per preset:</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -145,7 +142,7 @@ export default function DownloadPortal({ initialCode = "", onClose }) {
                   onClick={() => handleDownload()}
                   disabled={downloading === "main"}
                 >
-                  {downloading === "main" ? <><span className="spinner" /> Menyiapkan…</> : "⬇ Unduh Preset"}
+                  {downloading === "main" ? <><span className="spinner" /> Menyiapkan…</> : "Unduh Preset"}
                 </button>
               )}
 

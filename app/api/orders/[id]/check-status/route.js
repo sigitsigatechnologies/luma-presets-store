@@ -25,12 +25,28 @@ async function handleCheckStatus(id) {
         customerPhone: order.customer_phone,
         productName: product?.name || "",
         amount: order.amount,
-        paidAt: order.paid_at
+        paidAt: order.paid_at,
+        createdAt: order.created_at
       }
     };
   }
 
-  // 2. Query Midtrans API directly to check if customer has paid
+  // 2. If already FAILED in DB
+  if (order.status === "FAILED") {
+    return {
+      status: 200,
+      data: {
+        status: "FAILED",
+        orderId: order.id,
+        productName: product?.name || "",
+        amount: order.amount,
+        createdAt: order.created_at,
+        reason: "failed"
+      }
+    };
+  }
+
+  // 3. Query Midtrans API directly to check latest status
   const midtransData = await MidtransService.checkTransactionStatus(order.id);
   if (midtransData) {
     const tStatus = midtransData.transaction_status;
@@ -53,7 +69,26 @@ async function handleCheckStatus(id) {
           customerPhone: order.customer_phone,
           productName: product?.name || "",
           amount: order.amount,
-          paidAt: new Date().toISOString()
+          paidAt: new Date().toISOString(),
+          createdAt: order.created_at
+        }
+      };
+    }
+
+    const isFailed = ["deny", "cancel", "expire"].includes(tStatus);
+    if (isFailed) {
+      if (order.status !== "FAILED") {
+        await OrderModel.updateStatus(order.id, { status: "FAILED" });
+      }
+      return {
+        status: 200,
+        data: {
+          status: "FAILED",
+          orderId: order.id,
+          productName: product?.name || "",
+          amount: order.amount,
+          createdAt: order.created_at,
+          reason: tStatus
         }
       };
     }
@@ -63,9 +98,11 @@ async function handleCheckStatus(id) {
   return {
     status: 200,
     data: {
-      status: order.status,
+      status: order.status || "PENDING",
       orderId: order.id,
-      amount: order.amount
+      productName: product?.name || "",
+      amount: order.amount,
+      createdAt: order.created_at
     }
   };
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CheckIcon, ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 
 export default function PaymentSuccessModal({ order, onClose, onDownload }) {
   const [copied, setCopied] = useState(false);
@@ -34,9 +35,7 @@ export default function PaymentSuccessModal({ order, onClose, onDownload }) {
             margin: "0 auto 12px",
             boxShadow: "0 8px 16px rgba(0,0,0,0.15)"
           }}>
-            <svg width="30" height="30" fill="none" stroke="#ffffff" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-            </svg>
+            <CheckIcon className="h-8 w-8 text-white" strokeWidth={3} aria-hidden="true" />
           </div>
           <h2 style={{ fontSize: 22, fontWeight: 800, margin: 0, letterSpacing: "-0.02em" }}>
             Pembayaran Berhasil!
@@ -137,9 +136,7 @@ export default function PaymentSuccessModal({ order, onClose, onDownload }) {
               fontSize: 12,
               color: "#15803d"
             }}>
-              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
-                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.669-.699c.969.585 1.761.884 2.79.884 3.179 0 5.767-2.587 5.768-5.766.001-3.181-2.587-5.77-5.767-5.77zm0-2c4.28 0 7.768 3.487 7.768 7.766 0 4.281-3.488 7.77-7.768 7.77-1.341 0-2.601-.344-3.703-.951l-4.328 1.134 1.156-4.225c-.694-1.159-1.093-2.511-1.093-3.928 0-4.279 3.488-7.766 7.768-7.766z"/>
-              </svg>
+              <ChatBubbleLeftRightIcon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
               <span>Kode akses & link unduhan juga telah dikirim ke WhatsApp <strong>{order.customerPhone}</strong>.</span>
             </div>
           )}

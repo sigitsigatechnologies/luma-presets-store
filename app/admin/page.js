@@ -1,6 +1,17 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import {
+  CubeIcon,
+  ClipboardDocumentListIcon,
+  KeyIcon,
+  ChartBarIcon,
+  ArrowTopRightOnSquareIcon,
+  ArrowRightOnRectangleIcon,
+  XMarkIcon,
+  BoltIcon,
+  FolderOpenIcon,
+} from "@heroicons/react/24/outline";
 import styles from "./page.module.css";
 import BulkUploadModal from "../components/BulkUploadModal";
 
@@ -305,7 +316,7 @@ function AdminDashboard({ token, onLogout }) {
             className={`${styles.sidebarItem} ${tab === "products" ? styles.sidebarItemActive : ""}`}
             onClick={() => setTab("products")}
           >
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+            <CubeIcon className="h-4 w-4" aria-hidden="true" />
             Kelola Preset
             <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.7 }}>{products.length}</span>
           </button>
@@ -313,7 +324,7 @@ function AdminDashboard({ token, onLogout }) {
             className={`${styles.sidebarItem} ${tab === "orders" ? styles.sidebarItemActive : ""}`}
             onClick={() => setTab("orders")}
           >
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+            <ClipboardDocumentListIcon className="h-4 w-4" aria-hidden="true" />
             Transaksi
             {pendingCount > 0 && <span className={styles.badge}>{pendingCount}</span>}
           </button>
@@ -321,24 +332,24 @@ function AdminDashboard({ token, onLogout }) {
             className={`${styles.sidebarItem} ${tab === "codes" ? styles.sidebarItemActive : ""}`}
             onClick={() => setTab("codes")}
           >
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+            <KeyIcon className="h-4 w-4" aria-hidden="true" />
             Generate Kode
           </button>
           <button
             className={`${styles.sidebarItem} ${tab === "stats" ? styles.sidebarItemActive : ""}`}
             onClick={() => setTab("stats")}
           >
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+            <ChartBarIcon className="h-4 w-4" aria-hidden="true" />
             Statistik Toko
           </button>
         </nav>
         <div className={styles.sidebarFooter}>
           <a href="/" target="_blank" className={styles.sidebarItem}>
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-            Buka Storefront ↗
+            <ArrowTopRightOnSquareIcon className="h-4 w-4" aria-hidden="true" />
+            Buka Storefront
           </a>
           <button className={styles.sidebarItem} onClick={onLogout}>
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+            <ArrowRightOnRectangleIcon className="h-4 w-4" aria-hidden="true" />
             Keluar
           </button>
         </div>
@@ -681,7 +692,7 @@ function AdminDashboard({ token, onLogout }) {
                     </div>
 
                     <button type="submit" className="btn btn-primary" disabled={codeGenLoading || !codeGenProduct}>
-                      {codeGenLoading ? <span className="spinner" /> : "⚡ Generate Kode Akses Baru"}
+                      {codeGenLoading ? <span className="spinner" /> : <><BoltIcon className="h-4 w-4" aria-hidden="true" /> Generate Kode Akses Baru</>}
                     </button>
                   </form>
 
@@ -864,9 +875,7 @@ function ProductFormModal({ token, product, existingCategories = [], onClose, on
         <div className="modal-header">
           <h2>{isEdit ? `Edit Preset: ${product.name}` : "Tambah Preset Baru"}</h2>
           <button className="btn-icon" onClick={onClose}>
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <XMarkIcon className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
         <form onSubmit={handleSubmit}>
@@ -1008,7 +1017,7 @@ function ProductFormModal({ token, product, existingCategories = [], onClose, on
                   className="btn btn-outline btn-sm"
                   onClick={() => fileRef.current?.click()}
                 >
-                  📁 Pilih File dari Komputer
+                  <span className="inline-flex items-center gap-1.5"><FolderOpenIcon className="h-4 w-4" aria-hidden="true" /> Pilih File dari Komputer</span>
                 </button>
                 <span style={{ fontSize: 13, color: form.fileName ? "var(--success)" : "var(--text-3)" }}>
                   {form.fileName || (product?.hasFile ? "✓ File sudah tersimpan di database" : "Belum ada file preset")}

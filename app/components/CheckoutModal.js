@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import styles from "./CheckoutModal.module.css";
 
 const API = "";
@@ -94,6 +95,11 @@ export default function CheckoutModal({ product, bundleTier, products = [], onCl
           onSuccess(data);
           return true;
         }
+        if (data.status === "FAILED") {
+          stopPolling();
+          setActiveOrder((prev) => ({ ...(prev || fallbackData || {}), ...data, status: "FAILED" }));
+          return false;
+        }
       }
     } catch (err) {
       console.error("Gagal memeriksa status pembayaran:", err);
@@ -114,6 +120,9 @@ export default function CheckoutModal({ product, bundleTier, products = [], onCl
             stopPolling();
             cleanupMidtransDom();
             onSuccess(data);
+          } else if (data.status === "FAILED") {
+            stopPolling();
+            setActiveOrder((prev) => ({ ...(prev || baseOrder || {}), ...data, status: "FAILED" }));
           }
         }
       } catch (err) {
@@ -304,9 +313,7 @@ export default function CheckoutModal({ product, bundleTier, products = [], onCl
               : "Checkout Preset"}
           </h2>
           <button className="btn-icon" onClick={handleClose} aria-label="Tutup">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <XMarkIcon className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
@@ -458,90 +465,144 @@ export default function CheckoutModal({ product, bundleTier, products = [], onCl
         {/* Waiting / Auto-Check Step */}
         {step === "waiting" && activeOrder && (
           <div className="modal-body" style={{ textAlign: "center", padding: "28px 24px" }}>
-            <div style={{
-              width: 56, height: 56, borderRadius: "50%",
-              background: "rgba(22, 163, 74, 0.1)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto 16px"
-            }}>
-              <span className="spinner spinner-dark" style={{ width: 26, height: 26 }} />
-            </div>
+            {activeOrder.status === "FAILED" ? (
+              <>
+                <div style={{
+                  width: 56, height: 56, borderRadius: "50%",
+                  background: "rgba(220, 38, 38, 0.1)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  margin: "0 auto 16px",
+                  color: "#dc2626", fontSize: 26, fontWeight: 700
+                }}>
+                  !
+                </div>
+                <h3 style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>
+                  Pembayaran Gagal / Kadaluarsa
+                </h3>
+                <p style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 16 }}>
+                  {activeOrder.reason === "expire"
+                    ? "Batas waktu pembayaran telah habis."
+                    : activeOrder.reason === "cancel"
+                    ? "Pembayaran dibatalkan."
+                    : activeOrder.reason === "deny"
+                    ? "Pembayaran ditolak."
+                    : "Transaksi tidak berhasil atau telah melewati batas waktu."}
+                  {" "}Silakan lakukan pemesanan ulang jika ingin melanjutkan.
+                </p>
+                <div style={{
+                  background: "var(--bg-2)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--radius)",
+                  padding: "14px 16px",
+                  textAlign: "left",
+                  marginBottom: 20
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--text-3)", marginBottom: 4 }}>
+                    <span>ID Pesanan</span>
+                    <span style={{ fontFamily: "monospace", color: "var(--text)" }}>{activeOrder.orderId}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, fontWeight: 600 }}>
+                    <span>Total</span>
+                    <span>Rp {Number(activeOrder.amount).toLocaleString("id-ID")}</span>
+                  </div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <button className="btn btn-primary btn-lg" style={{ width: "100%" }} onClick={handleClose}>
+                    Tutup & Pesan Ulang
+                  </button>
+                  <a className="btn btn-outline" style={{ width: "100%" }} href={`/order?orderId=${encodeURIComponent(activeOrder.orderId)}`}>
+                    Lihat Detail Pesanan
+                  </a>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{
+                  width: 56, height: 56, borderRadius: "50%",
+                  background: "rgba(22, 163, 74, 0.1)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  margin: "0 auto 16px"
+                }}>
+                  <span className="spinner spinner-dark" style={{ width: 26, height: 26 }} />
+                </div>
 
-            <h3 style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>
-              Menunggu Pembayaran
-            </h3>
-            <p style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 16 }}>
-              Selesaikan pembayaran di popup Midtrans atau scan QRIS melalui m-Banking kamu.
-              Sistem akan mendeteksi status secara otomatis.
-            </p>
+                <h3 style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>
+                  Menunggu Pembayaran
+                </h3>
+                <p style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 16 }}>
+                  Selesaikan pembayaran di popup Midtrans atau scan QRIS melalui m-Banking kamu.
+                  Sistem akan mendeteksi status secara otomatis (termasuk jika kedaluwarsa).
+                </p>
 
-            <div style={{
-              background: "var(--bg-2)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--radius)",
-              padding: "14px 16px",
-              textAlign: "left",
-              marginBottom: 20
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--text-3)", marginBottom: 4 }}>
-                <span>ID Pesanan</span>
-                <span style={{ fontFamily: "monospace", color: "var(--text)" }}>{activeOrder.orderId}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, fontWeight: 600 }}>
-                <span>Total</span>
-                <span>Rp {Number(activeOrder.amount).toLocaleString("id-ID")}</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--success)", marginTop: 10 }}>
-                <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "var(--success)" }} />
-                <span>Auto-check aktif (memeriksa setiap beberapa detik)</span>
-              </div>
-            </div>
+                <div style={{
+                  background: "var(--bg-2)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--radius)",
+                  padding: "14px 16px",
+                  textAlign: "left",
+                  marginBottom: 20
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--text-3)", marginBottom: 4 }}>
+                    <span>ID Pesanan</span>
+                    <span style={{ fontFamily: "monospace", color: "var(--text)" }}>{activeOrder.orderId}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, fontWeight: 600 }}>
+                    <span>Total</span>
+                    <span>Rp {Number(activeOrder.amount).toLocaleString("id-ID")}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--success)", marginTop: 10 }}>
+                    <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "var(--success)" }} />
+                    <span>Auto-check aktif (memeriksa setiap beberapa detik)</span>
+                  </div>
+                </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <button
-                className="btn btn-primary btn-lg"
-                onClick={() => checkOrderStatus(activeOrder.orderId, activeOrder)}
-                disabled={checkingPayment}
-                style={{ width: "100%" }}
-              >
-                {checkingPayment ? <><span className="spinner" /> Memeriksa status…</> : "Cek Status Pembayaran ↻"}
-              </button>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <button
+                    className="btn btn-primary btn-lg"
+                    onClick={() => checkOrderStatus(activeOrder.orderId, activeOrder)}
+                    disabled={checkingPayment}
+                    style={{ width: "100%" }}
+                  >
+                    {checkingPayment ? <><span className="spinner" /> Memeriksa status…</> : "Cek Status Pembayaran"}
+                  </button>
 
-              <button
-                className="btn btn-outline"
-                onClick={() => openSnapPopup(activeOrder.snapToken, activeOrder.orderId, activeOrder)}
-                style={{ width: "100%" }}
-              >
-                Buka Kembali Pop-Up Midtrans
-              </button>
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => openSnapPopup(activeOrder.snapToken, activeOrder.orderId, activeOrder)}
+                    style={{ width: "100%" }}
+                  >
+                    Buka Kembali Pop-Up Midtrans
+                  </button>
 
-              {!IS_PRODUCTION && (
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={handleSimulatePayment}
-                  disabled={loading}
-                  style={{
-                    width: "100%",
-                    fontSize: 11,
-                    color: "var(--text-3)",
-                    background: "transparent",
-                    border: "none",
-                    textDecoration: "underline"
-                  }}
-                >
-                  {loading ? "Memproses…" : "Simulasi pembayaran (mode testing)"}
-                </button>
-              )}
+                  {!IS_PRODUCTION && (
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={handleSimulatePayment}
+                      disabled={loading}
+                      style={{
+                        width: "100%",
+                        fontSize: 11,
+                        color: "var(--text-3)",
+                        background: "transparent",
+                        border: "none",
+                        textDecoration: "underline"
+                      }}
+                    >
+                      {loading ? "Memproses…" : "Simulasi pembayaran (mode testing)"}
+                    </button>
+                  )}
 
-              <button
-                className="btn"
-                onClick={handleClose}
-                style={{ fontSize: 13, color: "var(--text-3)", marginTop: 4 }}
-              >
-                Tutup / Nanti Saja
-              </button>
-            </div>
+                  <button
+                    className="btn"
+                    onClick={handleClose}
+                    style={{ fontSize: 13, color: "var(--text-3)", marginTop: 4 }}
+                  >
+                    Tutup / Nanti Saja
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

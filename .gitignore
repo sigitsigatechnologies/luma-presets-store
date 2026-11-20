@@ -9,6 +9,7 @@ out/
 .env
 .env.local
 .env.production.local
+.env.vercel
 
 # database
 data/

@@ -1,5 +1,7 @@
 "use client";
 
+import { XMarkIcon } from "@heroicons/react/24/outline";
+
 export default function BundleModal({ tiers, onClose, onSelectTier }) {
   return (
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -7,9 +9,7 @@ export default function BundleModal({ tiers, onClose, onSelectTier }) {
         <div className="modal-header">
           <h2>Paket Bundling</h2>
           <button className="btn-icon" onClick={onClose} aria-label="Tutup">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <XMarkIcon className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
         <div className="modal-body">
