@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { OrderModel } from "@/lib/models/order.model.js";
 import { ProductModel } from "@/lib/models/product.model.js";
+import { MidtransService } from "@/lib/services/midtrans.service.js";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,9 @@ export async function GET(req, { params }) {
       redirectUrl: order.midtrans_redirect_url,
       accessCode: order.status === "PAID" ? order.access_code : null,
       paidAt: order.paid_at,
-      createdAt: order.created_at
+      createdAt: order.created_at,
+      expiresAt: MidtransService.getExpiresAt(order.created_at),
+      expiryMinutes: MidtransService.getExpiryMinutes()
     });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });

@@ -11,6 +11,8 @@ async function handleCheckStatus(id) {
   if (!order) return { status: 404, data: { error: "Pesanan tidak ditemukan" } };
 
   const product = await ProductModel.findById(order.product_id);
+  const expiresAt = MidtransService.getExpiresAt(order.created_at);
+  const expiryMinutes = MidtransService.getExpiryMinutes();
 
   // 1. If already PAID in our DB, return immediately
   if (order.status === "PAID") {
@@ -26,7 +28,9 @@ async function handleCheckStatus(id) {
         productName: product?.name || "",
         amount: order.amount,
         paidAt: order.paid_at,
-        createdAt: order.created_at
+        createdAt: order.created_at,
+        expiresAt,
+        expiryMinutes
       }
     };
   }
@@ -41,6 +45,8 @@ async function handleCheckStatus(id) {
         productName: product?.name || "",
         amount: order.amount,
         createdAt: order.created_at,
+        expiresAt,
+        expiryMinutes,
         reason: "failed"
       }
     };
@@ -70,7 +76,9 @@ async function handleCheckStatus(id) {
           productName: product?.name || "",
           amount: order.amount,
           paidAt: new Date().toISOString(),
-          createdAt: order.created_at
+          createdAt: order.created_at,
+        expiresAt,
+        expiryMinutes
         }
       };
     }
@@ -88,6 +96,8 @@ async function handleCheckStatus(id) {
           productName: product?.name || "",
           amount: order.amount,
           createdAt: order.created_at,
+        expiresAt,
+        expiryMinutes,
           reason: tStatus
         }
       };
@@ -102,7 +112,9 @@ async function handleCheckStatus(id) {
       orderId: order.id,
       productName: product?.name || "",
       amount: order.amount,
-      createdAt: order.created_at
+      createdAt: order.created_at,
+      expiresAt,
+      expiryMinutes
     }
   };
 }

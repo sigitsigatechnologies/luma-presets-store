@@ -82,6 +82,7 @@ export async function POST(req) {
       return NextResponse.json({ error: "Gagal membuat transaksi pembayaran Midtrans." }, { status: 502 });
     }
 
+    const createdAt = new Date().toISOString();
     await OrderModel.create({
       id: orderId,
       product_id: orderProductId,
@@ -93,7 +94,7 @@ export async function POST(req) {
       midtrans_snap_token: snapToken,
       midtrans_redirect_url: redirectUrl,
       bundle_items: bundleItemsJson,
-      created_at: new Date().toISOString()
+      created_at: createdAt
     });
 
     return NextResponse.json({
@@ -104,7 +105,10 @@ export async function POST(req) {
       amount,
       status: "PENDING",
       snapToken,
-      redirectUrl
+      redirectUrl,
+      createdAt,
+      expiresAt: MidtransService.getExpiresAt(createdAt),
+      expiryMinutes: MidtransService.getExpiryMinutes()
     }, { status: 201 });
   } catch (err) {
     console.error("[Order API Error]:", err);

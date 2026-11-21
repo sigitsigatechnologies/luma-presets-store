@@ -42,7 +42,9 @@ export async function POST(req) {
       status: o.status,
       accessCode: o.status === "PAID" ? o.access_code : null,
       paidAt: o.paid_at,
-      createdAt: o.created_at
+      createdAt: o.created_at,
+      expiresAt: MidtransService.getExpiresAt(o.created_at),
+      expiryMinutes: MidtransService.getExpiryMinutes()
     }));
 
     return NextResponse.json({ orders: data });

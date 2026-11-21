@@ -11,6 +11,32 @@ function formatRp(n) {
   return "Rp " + Number(n || 0).toLocaleString("id-ID");
 }
 
+function formatCountdown(ms) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  const pad = (value) => String(value).padStart(2, "0");
+  return hours > 0
+    ? `${hours} jam ${pad(minutes)} menit ${pad(seconds)} detik`
+    : `${minutes} menit ${pad(seconds)} detik`;
+}
+
+function formatWib(dateStr) {
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "-";
+  return (
+    new Intl.DateTimeFormat("id-ID", {
+      timeZone: "Asia/Jakarta",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(date) + " WIB"
+  );
+}
+
 function statusLabel(s) {
   if (s === "PAID") return { text: "Lunas", color: "#16a34a", bg: "rgba(22,163,74,0.1)" };
   if (s === "FAILED") return { text: "Gagal/Kadaluarsa", color: "#dc2626", bg: "rgba(220,38,38,0.1)" };
@@ -36,9 +62,15 @@ function OrderContent() {
   const [focusLoading, setFocusLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const [downloadCode, setDownloadCode] = useState(null);
+  const [now, setNow] = useState(Date.now());
 
   const focusId = searchParams.get("orderId") || "";
   const pollRef = useRef(null);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const fetchFocus = async (id, silent = false) => {
     if (!silent) {
@@ -113,6 +145,10 @@ function OrderContent() {
     marginBottom: 14,
     boxShadow: "var(--shadow-sm)"
   };
+
+  const expiresAtMs = focusOrder?.expiresAt ? new Date(focusOrder.expiresAt).getTime() : 0;
+  const remainingMs = expiresAtMs > 0 ? Math.max(0, expiresAtMs - now) : 0;
+  const isExpired = expiresAtMs > 0 && remainingMs === 0;
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
@@ -213,6 +249,26 @@ function OrderContent() {
                       <ClockIcon className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 600, color: "#92400e", marginBottom: 4 }}>Menunggu pembayaran</div>
+                        {expiresAtMs > 0 && (
+                          <div
+                            style={{
+                              display: "inline-block",
+                              fontSize: 13,
+                              fontWeight: 600,
+                              color: isExpired ? "#b91c1c" : "#92400e",
+                              marginBottom: 8,
+                              lineHeight: 1.6
+                            }}
+                          >
+                            {isExpired
+                              ? "Batas waktu pembayaran telah habis."
+                              : `Silakan bayar sebelum ${formatWib(focusOrder.expiresAt)}.`}
+                            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+                              <ClockIcon className="h-4 w-4" aria-hidden="true" />
+                              {isExpired ? "Pesanan akan kedaluwarsa." : `Sisa waktu: ${formatCountdown(remainingMs)}`}
+                            </div>
+                          </div>
+                        )}
                         <p style={{ fontSize: 13, color: "#92400e", lineHeight: 1.6, marginBottom: 12 }}>
                           Selesaikan pembayaran sesuai metode yang dipilih. Jika batas waktu habis, status akan berubah menjadi gagal/kadaluarsa.
                         </p>
