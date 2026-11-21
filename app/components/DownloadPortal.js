@@ -146,6 +146,32 @@ export default function DownloadPortal({ initialCode = "", onClose }) {
                 </button>
               )}
 
+              <details
+                style={{
+                  marginTop: 16,
+                  padding: "12px 14px",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--radius)",
+                  background: "var(--bg-2)",
+                  fontSize: 13,
+                  color: "var(--text-2)"
+                }}
+              >
+                <summary style={{ cursor: "pointer", fontWeight: 600, color: "var(--text)" }}>
+                  Cara import preset ke Lightroom
+                </summary>
+                <ol style={{ margin: "10px 0 0", paddingLeft: 18, lineHeight: 1.7 }}>
+                  <li>Download file <strong>.zip</strong>, lalu ekstrak di aplikasi Files (iPhone) atau My Files (Android).</li>
+                  <li>Buka Adobe Lightroom, pilih foto, lalu buka menu <strong>Presets</strong>.</li>
+                  <li>Tap ikon titik tiga (<strong>...</strong>) &rarr; <strong>Import Presets</strong>.</li>
+                  <li>Pilih file <strong>.xmp</strong> hasil ekstrak. Preset siap dipakai.</li>
+                </ol>
+                <p style={{ margin: "8px 0 0", color: "var(--text-3)" }}>
+                  iPhone: jangan buka file .xmp langsung dari Files/WhatsApp — impor selalu dari dalam Lightroom.
+                  Panduan lengkap juga sudah disertakan di dalam file .zip.
+                </p>
+              </details>
+
               <button
                 className="btn btn-outline"
                 style={{ width: "100%", marginTop: 12 }}

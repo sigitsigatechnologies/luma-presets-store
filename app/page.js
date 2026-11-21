@@ -584,7 +584,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={styles.faqSection}>
+      <section className={styles.faqSection} id="faq">
         <div className="container">
           <div className={styles.sectionHead}>
             <span className="badge badge-accent">FAQ</span>
@@ -625,6 +625,8 @@ export default function HomePage() {
               <button onClick={() => scrollToId("bundles")}>Paket</button>
               <button onClick={() => router.push("/order")}>Cek Pesanan</button>
               <button onClick={openDownload}>Portal Unduh</button>
+              <button onClick={() => router.push("/terms")}>Syarat &amp; Ketentuan</button>
+              <button onClick={() => router.push("/contact")}>Kontak</button>
             </div>
           </div>
           <p className={styles.footerLegal}>
